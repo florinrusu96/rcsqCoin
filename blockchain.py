@@ -71,7 +71,7 @@ class Block:
 
 
 class Blockchain:
-    difficulty = 3
+    difficulty = 5
     chain = []
     length = 0
 

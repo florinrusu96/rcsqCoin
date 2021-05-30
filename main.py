@@ -27,7 +27,7 @@ def main():
     if not os.path.exists(DB_FILE):
         print('DATABASE NOT PRESENT, CREATING ---')
         initial_setup(connection=connection)
-    sqlhelpers.insert_new_data(connection, get_network_blockchain())
+        sqlhelpers.insert_new_data(connection, get_network_blockchain())
     blockchain: Blockchain = get_local_blockchain(connection)
     blockchain.print_last(4)
     # transaction_list = get_transaction_list()

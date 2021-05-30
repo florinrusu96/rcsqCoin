@@ -26,6 +26,7 @@ def create_table(conn):
     try:
         cursor = conn.cursor()
         cursor.execute(create_table_sql)
+        conn.commit()
     except Error as e:
         print(e)
 
@@ -36,6 +37,7 @@ def insert_new_data(connection, network_blockchain):
     for block in network_blockchain.chain:
         cursor = connection.cursor()
         cursor.execute(sql, (block.number, block.nonce, str(block.previous_hash), str(block.data)))
+        connection.commit()
 
 
 def get_data(connection):
