@@ -1,5 +1,7 @@
 import json
 from hashlib import sha256
+
+from network import network
 import sqlhelpers
 
 
@@ -8,22 +10,20 @@ def get_local_blockchain(connection):
     blockchain = Blockchain()
     for block_data in data:
         block = Block(number=block_data[0], nonce=block_data[1], previous_hash=block_data[2],
-                      data=json.dumps(block_data[3]))
+                      data=json.loads(block_data[3].replace('\'', '"')))
         blockchain.add(block)
     blockchain.length = len(blockchain.chain)
     return blockchain
 
 
 def get_network_blockchain():
-    database = [{'sender': 'BANK', 'recipient': 'user2', 'amount': '3'},
-                {'sender': 'BANK', 'recipient': 'user1', 'amount': '3'},
-                {'sender': 'user1', 'recipient': 'user2', 'amount': '2'},
-                {'sender': 'user2', 'recipient': 'user1', 'amount': '3'},
-                {'sender': 'BANK', 'recipient': 'user1', 'amount': '2'},
-                ]
+    database = network.get_network_blockchain_data()
     blockchain = Blockchain()
-    for data in database:
-        blockchain.mine(Block(data=data))
+    for block_data in database:
+        block = Block(number=block_data[0], nonce=block_data[1], previous_hash=block_data[2],
+                      data=json.loads(block_data[3].replace('\'', '"')))
+        blockchain.add(block)
+    blockchain.length = len(blockchain.chain)
     return blockchain
 
 
@@ -100,14 +100,12 @@ class Blockchain:
 
         # With enough difficulty,
         # it's impossible for multiple blockchains to be the same length, and valid at the same time
-
-        # network_blockchain = get_network_blockchain()
-        # if network_blockchain is None:
-        #     return True
-        # if network_blockchain.length > blockchain.length and network_blockchain.is_blockchain_valid():
-        #     return False
-        # return True
-
+        #
+        network_blockchain = get_network_blockchain()
+        if network_blockchain is None:
+            return True
+        if network_blockchain.length >= blockchain.length and network_blockchain.is_blockchain_valid():
+            return False
         return True
 
     def mine(self, block):
@@ -122,6 +120,7 @@ class Blockchain:
                 if hashed_string == "0" * self.difficulty:
                     if self.is_local_blockchain_valid():
                         self.add(block)
+                        network.write_to_network_blockchain(blockchain=self, mined_by=block.data['mined_by'])
                     else:
                         print("Block has already been mined, replacing local blockchain")
                         sync_blockchain(get_network_blockchain())
